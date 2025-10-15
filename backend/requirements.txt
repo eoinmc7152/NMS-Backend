@@ -1,2 +1,6 @@
+gunicorn>=21.2.0
+python-dotenv>=1.0.1
+google-cloud-firestore>=2.18.0
 flask
 flask-cors
+
