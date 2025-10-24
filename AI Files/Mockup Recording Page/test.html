@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Alzheimer's Speech Recognition</title>
+</head>
+
+<body>
+  <h1>Speech Recognition Prototype</h1>
+
+  <!-- Put the image the user must describe in here -->
+   <p><strong>Please describe the following image:</strong></p>
+  <img id="image" src="testImage.jpg" alt="Stock image of a beach which the user must describe" width="300", height="200"/><br>
+
+  <button id="record">Start Recording</button>
+  <button id="submit" disabled>Submit Recording</button>
+
+  <p><strong>Recorded Transcript:</strong></p>
+  <p id="currentlyRecorded">Yet to begin recording.</p>
+
+  <p id="result">Diagnosis: undefined</p>
+
+  <script>
+  const OPENAI_KEY = "ENTER A KEY HERE";
+  const MODEL = "ft:gpt-4.1-nano-2025-04-14:3rd-year-group-project:transcript-labeller:CLdP493P";
+
+  const recordButton = document.getElementById("record");
+  const submitButton = document.getElementById("submit");
+  const result = document.getElementById("result");
+  const displayTranscript = document.getElementById("currentlyRecorded");
+
+  let transcript = "";
+  let recognition = null;
+  let currentlyListening = false;
+
+  if ("webkitSpeechRecognition" in window || "SpeechRecognition" in window) {
+    // Checks if the browser can record speech. (Likely only works with Chrome & Edge)
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    recognition = new SR(); // Creates a new object of the speech recognition.
+
+    // Settings:
+    recognition.lang = "en-IE";
+    recognition.interimResults = true;  // Allows the recording to update in real time
+    recognition.continuous = true; // Prevents the recording from ending if the speaker takes a break
+
+    // Events:
+    recognition.onstart = () => {
+      currentlyListening = true;
+      recordButton.textContent = "End Recording";
+    };
+
+    recognition.onend = () => {
+      currentlyListening = false;
+      recordButton.textContent = "New Recording";
+
+      if (transcript){
+        submitButton.disabled = false
+      } else{
+        displayTranscript.textContent = "No speech detected, try again."
+        submitButton.disabled = true
+      }
+    };
+
+    recognition.onresult = (event) => {  // Every time the speech recognition software has new results given to us
+      let temporaryTranscript = "";
+
+      for (let i = event.resultIndex; i < event.results.length; ++i) {  // Goes through all the sections of speech given in this event
+        const currentSection = event.results[i];  // Take the current section of speech so we can check if it is the final one
+
+        if (currentSection.isFinal) transcript += currentSection[0].transcript + " ";  // If it's the final section adds it to the real transcript
+        else temporaryTranscript += currentSection[0].transcript;  // Otherwise adds it to the temporary transcript
+      }
+
+      displayTranscript.textContent = transcript + temporaryTranscript;
+    };
+  } else {  // If speech recording is not supported
+    recordButton.disabled = true;
+    alert("This browser does not support speech recording. Please try Chrome or Edge.");
+  }
+
+  recordButton.addEventListener("click", () => {
+    if (!recognition) return;  // Only records if the browser supports it
+
+    if (currentlyListening) {  // If pressing the button to end the recording
+      recognition.stop();
+    } else {  // If pressing the button to start the recording
+      transcript = "";
+      displayTranscript.textContent = "...";  // Puts placeholder text in the transcript section
+      recognition.start();
+    }
+  });
+
+  submitButton.addEventListener("click", async () => {
+    if (!transcript) return alert("Please make a recording before submitting!");
+
+    result.textContent = "Diagnosis: (CURRENTLY LOADING)";
+
+    const messages = [
+      {role: "system", content: "It is your job to analyse fictional transcripts where a person describes the content of a drawing. You must label each transcript as pattern_a or pattern_b."},
+      {role: "user", content: transcript}
+    ];
+
+    try {
+      const response = await fetch("https://api.openai.com/v1/chat/completions", {  // Sending the transcript to OpenAI
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",  // Specify that it is a JSON request
+          "Authorization": "Bearer " + OPENAI_KEY  // Give the key to authenticate the request
+        },
+        body: JSON.stringify({model: MODEL, messages, max_tokens: 10, temperature: 0})  // Converts the message content to JSON and gives response constraints (length and temperature)
+      });
+
+      const data = await response.json();  // Awaits a response then converts the JSON into javascript
+      const output = data.choices?.[0]?.message?.content?.trim().toLowerCase() || "(NO RESPONSE FROM OPENAI)";
+      console.log("Response from OpenAI:", data);  // Logs the response from OpenAI in the browser console - helps to show the code isn't smoke and mirrors
+      // Press F12 in browser to open dev tools, then go to the console tab and look at data.choices[0] to see the OpenAI response
+
+      // Convert "pattern_a" or "pattern_b" into unhealthy, or Alzheimer's
+      let convertedOutput;
+      if (output.includes("pattern_a")) convertedOutput = "Healthy";
+      else if (output.includes("pattern_b")) convertedOutput = "Alzheimer's Risk";
+      else convertedOutput = "Inconclusive";
+
+      result.textContent = "Diagnosis: " + convertedOutput;
+    } catch (err) {
+      result.textContent = "Error occurred: " + err.message;
+    }
+  });
+  </script>
+</body>
+</html>
