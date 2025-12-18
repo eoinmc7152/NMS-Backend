@@ -3,7 +3,7 @@ from flask_cors import CORS
 from src.routes.health import bp as health_bp
 from src.routes.questionnaire import bp as questionnaire_bp
 from src.routes.results import bp as results_bp
-
+import os
 app = Flask(__name__)
 
 # Allow your common local frontends
@@ -28,4 +28,6 @@ def _server_error(e):
     return jsonify(ok=False, error="Internal Server Error"), 500
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5000)
+    port = int(os.environ.get("PORT", 8080))
+    app.run(host="0.0.0.0", port=port)
+
