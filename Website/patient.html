@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Patient Profile</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="browser-bar">
+    <span class="dot"></span>
+    <span class="dot"></span>
+    <span class="dot"></span>
+  </div>
+
+  <header class="appbar">
+    <button class="icon-btn" aria-label="menu" id="burger-toggle-patient">
+      <span class="hamburger"></span>
+    </button>
+    <div class="burger-menu" id="burger-menu-patient" aria-hidden="true">
+      <a href="patients.html">Patients</a>
+      <a href="news.html">News</a>
+      <a href="reports.html">Reports</a>
+    </div>
+    <div class="spacer"></div>
+    <a href="patients.html" class="btn-chip">← Back to Patients</a>
+  </header>
+
+  <section class="patient-profile">
+    <div id="profile-content">
+      <form id="profile-form">
+        <div class="field">
+          <label for="name-input">Name</label>
+          <input id="name-input" name="name" type="text" readonly />
+        </div>
+
+        <div class="field">
+          <label for="age-input">Age</label>
+          <input id="age-input" name="age" type="number" min="0" readonly />
+        </div>
+
+        <div class="field">
+          <label for="risk-input">Risk</label>
+          <select id="risk-input" name="risk" disabled>
+            <option>Low</option>
+            <option>Medium</option>
+            <option>High</option>
+            <option>No Risk</option>
+          </select>
+
+          <!-- ADDED: risk score display -->
+          <p class="muted" id="risk-score-label" style="margin:6px 0 0;"></p>
+        </div>
+
+        <div class="field">
+          <label for="notes-input">Notes</label>
+          <textarea id="notes-input" name="notes" rows="3" readonly></textarea>
+        </div>
+
+        <div style="display:flex; gap:12px; margin-top:10px;">
+          <button id="edit-btn" type="button" class="btn-primary">Edit</button>
+          <button id="save-btn" type="button" class="btn-primary" style="display:none;">Save</button>
+          <button id="cancel-btn" type="button" class="btn-primary" style="background:#9ca3af; display:none;">Cancel</button>
+        </div>
+      </form>
+    </div>
+
+    <div id="no-data" style="display:none;">Patient not found. <a href="patients.html">Back to patients</a></div>
+  </section>
+
+  <script>
+    (function(){
+      function qs(name) {
+        const params = new URLSearchParams(window.location.search);
+        return params.get(name);
+      }
+
+      function normalizeRiskForSelect(v){
+        const s = String(v || '').trim();
+        const lower = s.toLowerCase();
+
+        // accept already-correct labels
+        const allowed = ['low','medium','high','no risk'];
+        if (allowed.includes(lower)) {
+          // keep casing consistent with your dropdown options
+          if (lower === 'no risk') return 'No Risk';
+          return lower.charAt(0).toUpperCase() + lower.slice(1);
+        }
+
+        // map backend-ish values
+        if (lower.includes('moderate')) return 'Medium';
+        if (lower.includes('med')) return 'Medium';
+        if (lower.includes('none')) return 'No Risk';
+
+        // fallback
+        return 'Low';
+      }
+
+      const id = qs('id');
+      const STORAGE_KEY = 'nmsPatients';
+      const profile = document.getElementById('profile-content');
+      const noData = document.getElementById('no-data');
+
+      if (!id) {
+        profile.style.display = 'none';
+        noData.style.display = '';
+        return;
+      }
+
+      const raw = localStorage.getItem(STORAGE_KEY);
+      let patients = [];
+      if (raw) patients = JSON.parse(raw);
+
+      const pIndex = patients.findIndex(x => String(x.id) === String(id));
+      const p = pIndex > -1 ? patients[pIndex] : null;
+
+      if (!p) {
+        profile.style.display = 'none';
+        noData.style.display = '';
+        return;
+      }
+
+      const currentUserId = localStorage.getItem('nmsCurrentUser');
+      let currentUser = null;
+      try {
+        const allUsers = JSON.parse(localStorage.getItem('nmsUsers')||'[]');
+        currentUser = allUsers.find(u=>String(u.id)===String(currentUserId)) || null;
+      } catch(e){
+        currentUser = null;
+      }
+
+      if (!(currentUser && (currentUser.role === 'admin' || String(p.ownerId) === String(currentUserId)))) {
+        profile.style.display = 'none';
+        noData.style.display = '';
+        return;
+      }
+
+      // populate form
+      const nameInput = document.getElementById('name-input');
+      const ageInput = document.getElementById('age-input');
+      const riskInput = document.getElementById('risk-input');
+      const notesInput = document.getElementById('notes-input');
+      const riskScoreLabel = document.getElementById('risk-score-label');
+
+      function renderRiskScore(patient){
+        if (!riskScoreLabel) return;
+        const s = patient && typeof patient.riskScore === 'number' ? patient.riskScore : null;
+        riskScoreLabel.textContent = (s === null) ? '' : ('Risk score: ' + s);
+      }
+
+      nameInput.value = p.name || '';
+      ageInput.value = p.age || '';
+      riskInput.value = normalizeRiskForSelect(p.risk || 'Low');
+      notesInput.value = p.notes || '';
+      renderRiskScore(p);
+
+      // controls
+      const editBtn = document.getElementById('edit-btn');
+      const saveBtn = document.getElementById('save-btn');
+      const cancelBtn = document.getElementById('cancel-btn');
+
+      function setEditMode(on) {
+        nameInput.readOnly = !on;
+        ageInput.readOnly = !on;
+        riskInput.disabled = !on;
+        notesInput.readOnly = !on;
+        editBtn.style.display = on ? 'none' : '';
+        saveBtn.style.display = on ? '' : 'none';
+        cancelBtn.style.display = on ? '' : 'none';
+      }
+
+      editBtn.addEventListener('click', () => setEditMode(true));
+
+      cancelBtn.addEventListener('click', () => {
+        // restore values
+        nameInput.value = p.name || '';
+        ageInput.value = p.age || '';
+        riskInput.value = normalizeRiskForSelect(p.risk || 'Low');
+        notesInput.value = p.notes || '';
+        renderRiskScore(p);
+        setEditMode(false);
+      });
+
+      saveBtn.addEventListener('click', () => {
+        const newName = nameInput.value.trim();
+        const newAge = ageInput.value.trim();
+        const newRisk = normalizeRiskForSelect(riskInput.value);
+        const newNotes = notesInput.value.trim();
+        if (!newName) return alert('Name is required');
+
+        // IMPORTANT: keep existing fields like riskScore, lastCloudResultId, etc.
+        patients[pIndex] = Object.assign({}, patients[pIndex], {
+          name: newName,
+          age: newAge || '—',
+          risk: newRisk,
+          notes: newNotes,
+          lastUpdated: (new Date()).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+        });
+
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(patients));
+
+        // update the local reference so cancel/edit stays correct
+        Object.assign(p, patients[pIndex]);
+
+        renderRiskScore(p);
+        setEditMode(false);
+        alert('Patient updated');
+      });
+
+      setEditMode(false);
+    })();
+  </script>
+
+  <script src="scripts.js"></script>
+</body>
+</html>
