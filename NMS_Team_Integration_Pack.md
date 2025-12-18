@@ -14,6 +14,7 @@ Some endpoints require an API key header.
 
 **Header name**
 - `X-API-Key`
+- some-secret-key-123
 
 **API key value**
 - Set by the project owner in Cloud Run as the environment variable `API_KEY`.
