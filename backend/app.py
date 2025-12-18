@@ -27,6 +27,11 @@ def _not_found(e):
 def _server_error(e):
     return jsonify(ok=False, error="Internal Server Error"), 500
 
+@app.get("/")
+def home():
+    return jsonify(service="nms-backend", status="ok", endpoints=["/health/", "/patient/questionnaire", "/results"])
+
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
     app.run(host="0.0.0.0", port=port)
