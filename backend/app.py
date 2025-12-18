@@ -6,8 +6,7 @@ from src.routes.results import bp as results_bp
 import os
 app = Flask(__name__)
 
-# Allow your common local frontends
-CORS(app, resources={r"/*": {"origins": ["http://localhost:3000", "http://localhost:5173"]}})
+CORS(app)
 
 # Blueprints
 app.register_blueprint(health_bp, url_prefix="/health")
