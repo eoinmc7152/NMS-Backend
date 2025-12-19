@@ -1,0 +1,13 @@
+# Ignore virtual environments
+flask_app/venv/
+flask_app/.venv/
+# Ignore IDE settings
+.idea
+flask_app/.idea/
+# Ignore python cache files
+flask_app/__pycache__/
+flask_app/*.pyc
+# Ignore environment files
+flask_app/.env
+# Ignore saved weekly summary
+news_agent/weekly_summary.txt
