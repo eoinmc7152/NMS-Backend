@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Dementia News</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="browser-bar">
+    <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+  </div>
+
+  <header class="appbar">
+    <button class="icon-btn" aria-label="menu" id="burger-toggle-news" aria-expanded="false"><span class="hamburger"></span></button>
+    <div class="burger-menu" id="burger-menu-news" aria-hidden="true">
+      <a href="patients.html">Patients</a>
+      <a href="news.html">News</a>
+      <a href="reports.html">Reports</a>
+
+    </div>
+
+    <div style="display:flex; flex-direction:column; gap:4px;">
+      <h1 class="page-title" style="margin:6px 0 0">Dementia Research News</h1>
+      <p class="page-subtitle" style="margin:0">AI-curated research highlights and news articles</p>
+    </div>
+
+    <div class="spacer"></div>
+  </header>
+
+  <main class="page">
+    <section class="card">
+      <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px; gap:8px;">
+        <strong style="font-size:16px">Latest Articles</strong>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <small class="muted">AI-generated — review before publishing</small>
+          <button id="news-refresh" class="btn-primary" type="button">Refresh</button>
+        </div>
+      </div>
+      <div class="news-list" id="news-list">
+        <div class="news-empty muted" id="news-empty">No articles yet. Click Refresh to load AI articles.</div>
+        <template id="news-card-tpl">
+          <article class="news-card">
+            <div class="news-card-body">
+              <h3 class="news-title"></h3>
+              <p class="news-excerpt"></p>
+            </div>
+            <div class="news-meta">
+              <span class="news-source muted"></span>
+              <span class="news-date muted"></span>
+            </div>
+            <div class="news-actions">
+              <a class="btn-chip" href="#" target="_blank">Open</a>
+              <button class="btn-chip" data-action="save">Save</button>
+            </div>
+          </article>
+        </template>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-content">
+      <p class="brand">NeuroMind System (NMS)</p>
+      <p class="copy">&copy; 2025 NMS Project Team. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script src="scripts.js"></script>
+</body>
+</html>

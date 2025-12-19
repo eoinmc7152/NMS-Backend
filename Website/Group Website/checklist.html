@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NMS Web — Safety Checklist</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="browser-bar">
+    <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+  </div>
+
+  <header class="appbar">
+    <button class="icon-btn" aria-label="menu" id="burger-toggle-checklist">
+      <span class="hamburger"></span>
+    </button>
+
+    <div class="burger-menu" id="burger-menu-checklist" aria-hidden="true">
+      <a href="patients.html">Patients</a>
+      <a href="news.html">News</a>
+      <a href="reports.html">Reports</a>
+    </div>
+
+    <div class="spacer"></div>
+  </header>
+
+  <main class="page">
+    <h1 class="page-title">Daily Safety Checklist</h1>
+    <p class="page-subtitle">Simple routine + safety checks for dementia care (auto-saves)</p>
+    <p class="muted" id="checklist-patient-label" style="margin-top:-8px;"></p>
+
+    <section class="card" style="margin-top:18px;">
+      <div style="padding:12px 16px; display:flex; gap:12px; align-items:end; flex-wrap:wrap;">
+        <div style="display:flex; flex-direction:column; gap:6px;">
+          <label class="muted" for="checklist-date">Date</label>
+          <input id="checklist-date" type="date" class="input" style="max-width:200px;" />
+        </div>
+
+        <div id="checklist-status" class="muted" style="margin-left:auto;">Not saved yet.</div>
+      </div>
+    </section>
+
+    <section class="card" style="margin-top:18px;">
+      <div style="padding:12px 16px;">
+        <div id="checklist-warning" class="alert-warning" style="display:none;"></div>
+       
+      </div>
+    </section>
+
+    <section class="card" style="margin-top:18px;">
+      <div style="padding:12px 16px;">
+        <h3 style="margin:0 0 12px;">Routine</h3>
+        <form id="checklist-form" class="checklist-grid"></form>
+      </div>
+    </section>
+
+    <section class="card" style="margin-top:18px;">
+      <div style="padding:12px 16px;">
+        <h3 style="margin:0 0 12px;">Wellbeing</h3>
+
+        <div class="checklist-grid">
+          <div class="checklist-row">
+            <label for="sleep-hours"><strong>Sleep (hours)</strong></label>
+            <input id="sleep-hours" type="number" min="0" max="24" step="0.5" class="input" placeholder="e.g. 7.5" />
+          </div>
+
+          <div class="checklist-row">
+            <label for="mood"><strong>Mood</strong></label>
+            <select id="mood" class="input">
+              <option value="">Select…</option>
+              <option value="good">Good</option>
+              <option value="ok">Okay</option>
+              <option value="low">Low</option>
+              <option value="anxious">Anxious</option>
+              <option value="agitated">Agitated</option>
+            </select>
+          </div>
+
+          <div class="checklist-row checklist-row-wide">
+            <label for="checklist-notes"><strong>Notes</strong> <span class="muted">(optional)</span></label>
+            <textarea id="checklist-notes" class="input" rows="3" placeholder="Any concerns, unusual behaviour, appetite changes…"></textarea>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:10px; margin-top:12px; flex-wrap:wrap;">
+          <button id="checklist-clear" class="btn-secondary" type="button">Clear this date</button>
+          <button id="checklist-export" class="btn-primary" type="button">Download JSON</button>
+          <button id="checklist-print" class="btn-chip" type="button">Print</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="scripts.js"></script>
+
+  <footer class="site-footer">
+    <div class="footer-content">
+      <p class="brand">NeuroMind System (NMS)</p>
+      <p class="copy">&copy; 2025 NMS Project Team. All rights reserved.</p>
+    </div>
+  </footer>
+</body>
+</html>

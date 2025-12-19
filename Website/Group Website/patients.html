@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NMS Web — Patients</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="browser-bar">
+    <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+  </div>
+
+  <header class="appbar">
+    <button class="icon-btn" aria-label="menu" id="burger-toggle-patients" aria-expanded="false">
+      <span class="hamburger"></span>
+    </button>
+    <div class="burger-menu" id="burger-menu-patients" aria-hidden="true">
+      <a href="patients.html">Patients</a>
+      <a href="news.html">News</a>
+      <a href="reports.html">Reports</a>
+    </div>
+
+    <div class="spacer"></div>
+    <button id="add-patient-btn" class="btn-pill primary" type="button">Add Patient <span class="chev">›</span></button>
+  </header>
+
+  <main class="page">
+    <h1 class="page-title">Patients</h1>
+    <p class="page-subtitle">Manage your patients and assessments</p>
+
+    <div id="patient-form" class="patient-form" aria-hidden="true" style="display:none;">
+      <form id="new-patient-form">
+        <div class="field">
+          <label for="p-name">Patient name</label>
+          <input id="p-name" name="p-name" type="text" placeholder="Full name" required />
+        </div>
+        <div class="field">
+          <label for="p-age">Age</label>
+          <input id="p-age" name="p-age" type="number" min="0" placeholder="Age" required />
+        </div>
+        <div class="field">
+          <label for="p-risk">Risk</label>
+          <select id="p-risk" name="p-risk">
+            <option>Low</option>
+            <option>Medium</option>
+            <option>High</option>
+            <option>No Risk</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="p-notes">Notes</label>
+          <input id="p-notes" name="p-notes" type="text" placeholder="Short notes" />
+        </div>
+        <div style="display:flex; gap:12px; margin-top:8px;">
+          <button class="btn-primary" type="submit">Save Patient</button>
+          <button id="cancel-patient" class="btn-primary" type="button" style="background:#9ca3af;">Cancel</button>
+        </div>
+      </form>
+    </div>
+
+    <section class="card">
+      <div class="table-band"></div>
+      <table class="tracker">
+        <thead>
+          <tr>
+            <th>Patient Name</th>
+            <th>Age</th>
+            <th>Last Updated</th>
+            <th>Risk</th>
+            <th>Notes</th>
+            <th>View Profile</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="patients-tbody"></tbody>
+      </table>
+    </section>
+
+    <section class="card" style="margin-top:18px;">
+      <div style="padding:12px 16px;">
+        <h3 style="margin:0 0 8px;">Cloud Results (from Android)</h3>
+        <p class="muted" id="cloud-status">Click to load results submitted from the Android app.</p>
+
+        <div style="text-align: right; margin-top:12px;">
+          <button id="cloud-fetch-results" class="btn-primary" type="button" style="margin-right: 8px;">Refresh Cloud Results</button>
+          <button id="cloud-sync-patients" class="btn-secondary" type="button">Sync to Web Patients</button>
+        </div>
+
+        <div id="cloud-output" style="margin-top:12px;"></div>
+        <p class="muted" style="margin-top:10px;">
+          Tip: Load Cloud Results first, then click Sync to Web Patients to add/update patients for doctors to view.
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <script src="scripts.js"></script>
+
+  <footer class="site-footer">
+    <div class="footer-content">
+      <p class="brand">NeuroMind System (NMS)</p>
+      <p class="copy">&copy; 2025 NMS Project Team. All rights reserved.</p>
+    </div>
+  </footer>
+</body>
+</html>

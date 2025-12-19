@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NMS Web — Reports</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+  <div class="browser-bar">
+    <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+  </div>
+
+  <header class="appbar">
+    <button class="icon-btn" aria-label="menu" id="burger-toggle-reports">
+      <span class="hamburger"></span>
+    </button>
+
+    <div class="burger-menu" id="burger-menu-reports" aria-hidden="true">
+      <a href="patients.html">Patients</a>
+      <a href="news.html">News</a>
+      <a href="reports.html">Reports</a>
+    </div>
+
+    <div class="spacer"></div>
+  </header>
+
+  <main class="page">
+    <h1 class="page-title">Reports</h1>
+    <p class="page-subtitle">Summary statistics for your patients</p>
+
+    <section class="card report-grid" id="reports-grid">
+      <div class="report-card">
+        <h3>Total patients</h3>
+        <p class="large" id="total-count">0</p>
+      </div>
+
+      <div class="report-card">
+        <h3>High risk</h3>
+        <p class="large" id="high-count">0</p>
+        <div class="bar-bg">
+          <div id="bar-high" class="bar" style="width:0%"></div>
+        </div>
+        <p class="muted" id="high-percent">0%</p>
+      </div>
+
+      <div class="report-card">
+        <h3>Medium risk</h3>
+        <p class="large" id="med-count">0</p>
+        <div class="bar-bg">
+          <div id="bar-med" class="bar bar-medium" style="width:0%"></div>
+        </div>
+        <p class="muted" id="med-percent">0%</p>
+      </div>
+
+      <div class="report-card">
+        <h3>Low / No risk</h3>
+        <p class="large" id="low-count">0</p>
+        <div class="bar-bg">
+          <div id="bar-low" class="bar bar-low" style="width:0%"></div>
+        </div>
+        <p class="muted" id="low-percent">0%</p>
+      </div>
+
+      <div class="report-card" style="align-items:center; display:flex; flex-direction:column; justify-content:center;">
+        <h3>Risk distribution</h3>
+        <canvas id="risk-pie" width="180" height="180" aria-label="Risk distribution chart"></canvas>
+        <button id="download-csv" class="btn-primary" style="margin-top:10px;">Download CSV</button>
+      </div>
+    </section>
+
+    <section class="card" style="margin-top:18px;">
+      <div style="padding:12px 16px;">
+        <h3 style="margin:0 0 8px">Details</h3>
+        <p class="muted">Click a patient to view profile:</p>
+        <div id="patient-list" style="margin-top:12px"></div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    (function () {
+      const STORAGE_KEY = 'nmsPatients';
+
+      function getPatients() {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return [];
+        try { return JSON.parse(raw); } catch (e) { return []; }
+      }
+
+      function drawPie(canvas, high, med, low, total) {
+        if (!canvas || !canvas.getContext) return;
+        const ctx = canvas.getContext('2d');
+        const values = [high, med, low];
+        const colors = ['#ef4444', '#f59e0b', '#10b981'];
+        const sum = values.reduce((a, b) => a + b, 0) || 1;
+        let start = -0.5 * Math.PI;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        values.forEach((v, i) => {
+          const slice = v / sum;
+          const end = start + slice * 2 * Math.PI;
+          ctx.beginPath();
+          ctx.moveTo(canvas.width / 2, canvas.height / 2);
+          ctx.arc(canvas.width / 2, canvas.height / 2, Math.min(canvas.width, canvas.height) / 2 - 6, start, end);
+          ctx.closePath();
+          ctx.fillStyle = colors[i];
+          ctx.fill();
+          start = end;
+        });
+
+        ctx.fillStyle = 'rgba(0,0,0,0.8)';
+        ctx.font = '14px system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(total, canvas.width / 2, canvas.height / 2 + 6);
+      }
+
+      function compute() {
+        const pts = getPatients();
+        const visible = pts;
+
+        const total = visible.length;
+        const high = visible.filter(p => String(p.risk).toLowerCase().includes('high')).length;
+        const med = visible.filter(p => String(p.risk).toLowerCase().includes('medium')).length;
+        const low = visible.filter(p => !String(p.risk).toLowerCase().includes('high') && !String(p.risk).toLowerCase().includes('medium')).length;
+
+        const pct = (n) => total ? Math.round((n / total) * 100) : 0;
+
+        document.getElementById('total-count').textContent = total;
+        document.getElementById('high-count').textContent = high;
+        document.getElementById('med-count').textContent = med;
+        document.getElementById('low-count').textContent = low;
+
+        document.getElementById('high-percent').textContent = pct(high) + '%';
+        document.getElementById('med-percent').textContent = pct(med) + '%';
+        document.getElementById('low-percent').textContent = pct(low) + '%';
+
+        document.getElementById('bar-high').style.width = pct(high) + '%';
+        document.getElementById('bar-med').style.width = pct(med) + '%';
+        document.getElementById('bar-low').style.width = pct(low) + '%';
+
+        const titleEl = document.querySelector('.page-title');
+        const subtitleEl = document.querySelector('.page-subtitle');
+
+        titleEl.textContent = 'Reports';
+        subtitleEl.textContent = 'Summary statistics for all patients';
+
+        const list = document.getElementById('patient-list');
+        list.innerHTML = '';
+
+        if (visible.length === 0) {
+          list.innerHTML = '<p class="muted">No patients to show. Go to <a href="patients.html">Patients</a> to add some.</p>';
+        } else {
+          const ul = document.createElement('div');
+          ul.style.display = 'grid';
+          ul.style.gap = '8px';
+
+          visible.forEach(p => {
+            const el = document.createElement('div');
+            el.className = 'patient-row';
+
+            el.innerHTML =
+              '<a href="patient.html?id=' + p.id + '" class="btn-chip" style="display:inline-block">' + p.name + '</a>' +
+              ' <a href="checklist.html?patientId=' + p.id + '" class="btn-chip" style="display:inline-block; margin-left:6px;">Checklist</a>' +
+              ' <span class="muted" style="margin-left:8px">' + p.risk + ' • ' + p.age + '</span>';
+
+            ul.appendChild(el);
+          });
+
+          list.appendChild(ul);
+        }
+
+        const canvas = document.getElementById('risk-pie');
+        if (canvas) drawPie(canvas, high, med, low, total || 0);
+      }
+
+      const csvBtn = document.getElementById('download-csv');
+      if (csvBtn) {
+        csvBtn.onclick = function () {
+          const pts = getPatients();
+          const visible = pts;
+
+          if (!visible || visible.length === 0) return alert('No patients to export');
+
+          const headers = ['id', 'name', 'age', 'risk', 'notes', 'lastUpdated'];
+          const rows = visible.map(p => headers.map(h => '"' + String(p[h] ?? '') + '"').join(','));
+          const csv = [headers.join(','), ...rows].join('\n');
+
+          const blob = new Blob([csv], { type: 'text/csv' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'nms_patients.csv';
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          URL.revokeObjectURL(url);
+        };
+      }
+
+      compute();
+      window.addEventListener('storage', compute);
+    })();
+  </script>
+
+  <script src="scripts.js"></script>
+
+  <footer class="site-footer">
+    <div class="footer-content">
+      <p class="brand">NeuroMind System (NMS)</p>
+      <p class="copy">&copy; 2025 NMS Project Team. All rights reserved.</p>
+    </div>
+  </footer>
+</body>
+
+</html>
